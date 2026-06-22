@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" version="2.20">
-		<Item id="1">
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CatalogPredefinedItems" version="2.10">
+		<Item id="1d70e27c-ce11-5d9a-be54-78363812158b">
 			<Name>ИвановИван</Name>
 			<Code>000000001</Code>
 			<Description>Иванов Иван Петрович</Description>
 			<IsFolder>false</IsFolder>
 			<Телефон>+7 (916) 123-45-67</Телефон>
 			<Адрес>г. Москва, ул. Ленина, д. 10</Адрес>
-			<ДатаРождения>1985-03-15</ДатаРождения>
+			<ДатаРождения xsi:type="xs:dateTime">1985-03-15T00:00:00</ДатаРождения>
 			<НомерВУ>77АА123456</НомерВУ>
 		</Item>
-		<Item id="2">
+		<Item id="7212fc24-e3a2-5107-af97-fcfce737d785">
 			<Name>ПетроваАнна</Name>
 			<Code>000000002</Code>
 			<Description>Петрова Анна Сергеевна</Description>
 			<IsFolder>false</IsFolder>
 			<Телефон>+7 (903) 987-65-43</Телефон>
 			<Адрес>г. Москва, пр. Мира, д. 25</Адрес>
-			<ДатаРождения>1990-07-22</ДатаРождения>
+			<ДатаРождения xsi:type="xs:dateTime">1990-07-22T00:00:00</ДатаРождения>
 			<НомерВУ>77ВВ654321</НомерВУ>
 		</Item>
-		<Item id="3">
+		<Item id="bccb6c23-bf3c-5f15-b4e1-31d1a64d59e7">
 			<Name>СидоровАлексей</Name>
 			<Code>000000003</Code>
 			<Description>Сидоров Алексей Николаевич</Description>
 			<IsFolder>false</IsFolder>
 			<Телефон>+7 (925) 555-12-34</Телефон>
 			<Адрес>г. Химки, ул. Молодёжная, д. 5</Адрес>
-			<ДатаРождения>1978-11-08</ДатаРождения>
+			<ДатаРождения xsi:type="xs:dateTime">1978-11-08T00:00:00</ДатаРождения>
 			<НомерВУ>50СС789012</НомерВУ>
 		</Item>
 </PredefinedData>

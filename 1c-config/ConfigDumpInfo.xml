@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ConfigDumpInfo xmlns="http://v8.1c.ru/8.3/xcf/dumpinfo" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" format="Hierarchical" version="2.20">
+<ConfigDumpInfo xmlns="http://v8.1c.ru/8.3/xcf/dumpinfo" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" format="Hierarchical" version="2.10">
 	<ConfigVersions>
 		<Metadata name="AccumulationRegister.АрендаОбороты" id="dbb35aee-8f04-49fd-8954-23e82d28f63f" configVersion="b11fc72578a21d4da0b6c142802c466800000000">
 			<Metadata name="AccumulationRegister.АрендаОбороты.Dimension.Договор" id="3069b9ab-19cf-46b6-9804-8a735818609c"/>

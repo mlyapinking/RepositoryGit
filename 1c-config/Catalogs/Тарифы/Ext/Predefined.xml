@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" version="2.20">
-		<Item id="1">
+<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="CatalogPredefinedItems" version="2.10">
+		<Item id="40aef50f-8971-537f-9221-fe9c0d61e772">
 			<Name>Эконом</Name>
 			<Code>000000001</Code>
 			<Description>Эконом</Description>
@@ -9,7 +9,7 @@
 			<ЛимитКм>200</ЛимитКм>
 			<СтоимостьСверхлимита>15</СтоимостьСверхлимита>
 		</Item>
-		<Item id="2">
+		<Item id="d29de4c7-e011-5e07-81f1-7acc1b78ddf5">
 			<Name>Стандарт</Name>
 			<Code>000000002</Code>
 			<Description>Стандарт</Description>
@@ -18,7 +18,7 @@
 			<ЛимитКм>250</ЛимитКм>
 			<СтоимостьСверхлимита>20</СтоимостьСверхлимита>
 		</Item>
-		<Item id="3">
+		<Item id="58de88c2-6c1a-5dad-b49d-ef81d0913927">
 			<Name>Бизнес</Name>
 			<Code>000000003</Code>
 			<Description>Бизнес</Description>
@@ -27,7 +27,7 @@
 			<ЛимитКм>300</ЛимитКм>
 			<СтоимостьСверхлимита>35</СтоимостьСверхлимита>
 		</Item>
-		<Item id="4">
+		<Item id="56b5ee99-ec3f-557e-92ab-68539080493a">
 			<Name>Премиум</Name>
 			<Code>000000004</Code>
 			<Description>Премиум</Description>

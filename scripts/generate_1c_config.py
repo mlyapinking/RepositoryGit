@@ -2,12 +2,14 @@
 """Generate full 1C configuration XML dump for car rental system."""
 
 import hashlib
-import os
+import re
 import uuid
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / "1c-config"
-VERSION = "2.20"
+# Учебная версия 1С: 8.3.17 → формат выгрузки 2.10
+VERSION = "2.10"
+COMPATIBILITY_MODE = "Version8_3_17"
 
 NS = (
     'xmlns="http://v8.1c.ru/8.3/MDClasses" '
@@ -46,6 +48,44 @@ def config_version(name: str) -> str:
 def write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
+
+
+def downgrade_configuration(cfg_text: str) -> str:
+    """Strip properties from newer platforms for 8.3.17 educational edition."""
+    cfg_text = re.sub(r'version="2\.\d+"', f'version="{VERSION}"', cfg_text, count=1)
+    cfg_text = cfg_text.replace("Version8_3_27", COMPATIBILITY_MODE)
+    newer_mobile = [
+        "SpeechToText", "Geofences", "IncomingShareRequests",
+        "AllIncomingShareRequestsTypesProcessing", "DocumentScanning",
+        "TextToSpeech", "AllFilesAccess", "Videoconferences", "NFC",
+        "BackgroundAudioRecording", "ApplicationUsageStatistics", "BarcodeScanning",
+    ]
+    for tag in newer_mobile:
+        cfg_text = re.sub(
+            rf"\s*<app:functionality>\s*<app:functionality>{tag}</app:functionality>.*?</app:functionality>\s*",
+            "",
+            cfg_text,
+            flags=re.DOTALL,
+        )
+    for tag in [
+        "StandaloneConfigurationRestrictionRoles",
+        "MobileApplicationURLs",
+        "AllowedIncomingShareRequestTypes",
+        "DefaultCollaborationSystemUsersChoiceForm",
+        "DatabaseTablespacesUseMode",
+    ]:
+        cfg_text = re.sub(rf"\s*<{tag}/>\s*", "\n", cfg_text)
+        cfg_text = re.sub(rf"\s*<{tag}>.*?</{tag}>\s*", "\n", cfg_text, flags=re.DOTALL)
+    return cfg_text
+
+
+def enum_predefined_ref(value: str) -> str:
+    if ".EnumValue." in value:
+        return value
+    parts = value.split(".")
+    if len(parts) == 3 and parts[0] == "Enum":
+        return f"Enum.{parts[1]}.EnumValue.{parts[2]}"
+    return value
 
 
 def header() -> str:
@@ -357,10 +397,10 @@ def catalog(name: str, synonym_text: str, obj_uuid: str, attributes: list, forms
         attr_block(a["name"], a["synonym"], a["type"], a["uuid"], a.get("fill", "DontCheck"))
         for a in attributes
     )
-    forms = forms or ["ФормаЭлемента", "ФормаСписка"]
+    forms = forms if forms is not None else []
     forms_xml = "\n".join(f"\t\t\t<Form>{f}</Form>" for f in forms)
-    default_obj = f"Catalog.{name}.Form.{forms[0]}"
-    default_list = f"Catalog.{name}.Form.{forms[1]}"
+    default_obj = f"Catalog.{name}.Form.{forms[0]}" if forms else ""
+    default_list = f"Catalog.{name}.Form.{forms[1]}" if len(forms) > 1 else ""
     return (
         header()
         + f'\t<Catalog uuid="{obj_uuid}">\n'
@@ -399,9 +439,9 @@ def catalog(name: str, synonym_text: str, obj_uuid: str, attributes: list, forms
         + "\t\t\t<SearchStringModeOnInputByString>Begin</SearchStringModeOnInputByString>\n"
         + "\t\t\t<FullTextSearchOnInputByString>DontUse</FullTextSearchOnInputByString>\n"
         + "\t\t\t<ChoiceDataGetModeOnInputByString>Directly</ChoiceDataGetModeOnInputByString>\n"
-        + f"\t\t\t<DefaultObjectForm>{default_obj}</DefaultObjectForm>\n"
+        + (f"\t\t\t<DefaultObjectForm>{default_obj}</DefaultObjectForm>\n" if default_obj else "\t\t\t<DefaultObjectForm/>\n")
         + "\t\t\t<DefaultFolderForm/>\n"
-        + f"\t\t\t<DefaultListForm>{default_list}</DefaultListForm>\n"
+        + (f"\t\t\t<DefaultListForm>{default_list}</DefaultListForm>\n" if default_list else "\t\t\t<DefaultListForm/>\n")
         + "\t\t\t<DefaultChoiceForm/>\n"
         + "\t\t\t<DefaultFolderChoiceForm/>\n"
         + "\t\t\t<AuxiliaryObjectForm/>\n"
@@ -629,7 +669,7 @@ def rights_all_objects() -> str:
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<Rights xmlns="http://v8.1c.ru/8.2/roles" xmlns:xs="http://www.w3.org/2001/XMLSchema" '
-        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="Rights" version="2.20">\n'
+        f'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="Rights" version="{VERSION}">\n'
         "\t<setForNewObjects>true</setForNewObjects>\n"
         "\t<setForAttributesByDefault>true</setForAttributesByDefault>\n"
         "\t<independentRightsOfChildObjects>false</independentRightsOfChildObjects>\n"
@@ -648,7 +688,7 @@ def manager_rights(objects: list) -> str:
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<Rights xmlns="http://v8.1c.ru/8.2/roles" xmlns:xs="http://www.w3.org/2001/XMLSchema" '
-        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="Rights" version="2.20">\n'
+        f'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="Rights" version="{VERSION}">\n'
         "\t<setForNewObjects>false</setForNewObjects>\n"
         "\t<setForAttributesByDefault>true</setForAttributesByDefault>\n"
         "\t<independentRightsOfChildObjects>false</independentRightsOfChildObjects>\n"
@@ -663,11 +703,15 @@ def predefined_catalog(items: list) -> str:
         attrs = ""
         for k, v in item.get("attrs", {}).items():
             if v.startswith("Enum."):
-                attrs += f"\n\t\t\t<{k}>{v}</{k}>"
+                ref = enum_predefined_ref(v)
+                attrs += f'\n\t\t\t<{k} xsi:type="xr:DesignTimeRef">{ref}</{k}>'
+            elif len(v) == 10 and v[4] == "-" and v[7] == "-":
+                attrs += f'\n\t\t\t<{k} xsi:type="xs:dateTime">{v}T00:00:00</{k}>'
             else:
                 attrs += f"\n\t\t\t<{k}>{v}</{k}>"
+        item_id = item.get("uuid") or uid(f"predef:{item['name']}")
         rows.append(
-            f"""\t\t<Item id="{item['id']}">
+            f"""\t\t<Item id="{item_id}">
 \t\t\t<Name>{item['name']}</Name>
 \t\t\t<Code>{item['code']}</Code>
 \t\t\t<Description>{item['description']}</Description>
@@ -677,7 +721,11 @@ def predefined_catalog(items: list) -> str:
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<PredefinedData xmlns="http://v8.1c.ru/8.3/xcf/predef" '
-        'xmlns:v8="http://v8.1c.ru/8.1/data/core" version="2.20">\n'
+        'xmlns:v8="http://v8.1c.ru/8.1/data/core" '
+        'xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" '
+        'xmlns:xs="http://www.w3.org/2001/XMLSchema" '
+        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+        f'xsi:type="CatalogPredefinedItems" version="{VERSION}">\n'
         + "\n".join(rows)
         + "\n</PredefinedData>\n"
     )
@@ -719,7 +767,7 @@ def catalog_item_form(catalog_name: str, fields: list) -> str:
         '<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" '
         'xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" '
         'xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" '
-        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">\n'
+        f'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="{VERSION}">\n'
         '\t<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">\n'
         '\t\t<Autofill>true</Autofill>\n'
         '\t</AutoCommandBar>\n'
@@ -770,7 +818,7 @@ def document_item_form(doc_name: str, fields: list) -> str:
         '<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" '
         'xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" '
         'xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" '
-        'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">\n'
+        f'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="{VERSION}">\n'
         '\t<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">\n'
         '\t\t<Autofill>true</Autofill>\n'
         '\t</AutoCommandBar>\n'
@@ -874,17 +922,6 @@ def main() -> None:
         {"id": "4", "name": "Премиум", "code": "000000004", "description": "Премиум",
          "attrs": {"БазоваяСкорость": "10000", "ЛимитКм": "400", "СтоимостьСверхлимита": "50"}},
     ]))
-
-    # Catalog forms
-    for cat, fields in [
-        ("Автомобили", ["Марка", "Модель", "ГосНомер", "ГодВыпуска", "Цвет", "ТипКоробкиПередач", "ТипТоплива", "ЦенаЗаСутки", "Статус"]),
-        ("Клиенты", ["Телефон", "Адрес", "ДатаРождения", "НомерВУ"]),
-        ("Тарифы", ["БазоваяСкорость", "ЛимитКм", "СтоимостьСверхлимита"]),
-    ]:
-        for form in ["ФормаЭлемента", "ФормаСписка"]:
-            f_uuid = uid(f"form:{cat}:{form}")
-            write(OUT / f"Catalogs/{cat}/Forms/{form}.xml", catalog_form_meta(cat, form, f_uuid))
-            write(OUT / f"Catalogs/{cat}/Forms/{form}/Ext/Form.xml", catalog_item_form(cat, fields if form == "ФормаЭлемента" else ["Code", "Description"]))
 
     # --- Documents ---
     dog_attrs = [
@@ -996,7 +1033,7 @@ def main() -> None:
         "СтатусыАвтомобилей", "Статусы автомобилей", "d87f1eac-3197-4ee6-a93a-6d4ab8ae2a99",
         [{"name": "Автомобиль", "synonym": "Автомобиль", "uuid": "bf463816-f6ac-47cc-8948-87bf719ad912", "type": type_ref("CatalogRef.Автомобили")}],
         [{"name": "Статус", "synonym": "Статус", "uuid": "3880109a-3375-4518-b54c-dafb57cc1900", "type": type_ref("EnumRef.СтатусыАвтомобиля")}],
-        periodicity="Second",
+        periodicity="Day",
     ))
 
     # --- Accumulation Registers ---
@@ -1145,19 +1182,6 @@ def main() -> None:
         + "\t\t</Properties>\n\t</Language>\n" + footer()
     ))
 
-    # --- Client interface ---
-    write(OUT / "Ext/ClientApplicationInterface.xml", """<?xml version="1.0" encoding="UTF-8"?>
-<ClientApplicationInterface xmlns="http://v8.1c.ru/8.2/managed-application/core" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="InterfaceLayouter">
-\t<top><panel id="a1000001-0000-4000-8000-000000000001"><uuid>a1000002-0000-4000-8000-000000000002</uuid></panel></top>
-\t<left><panel id="a1000003-0000-4000-8000-000000000003"><uuid>a1000004-0000-4000-8000-000000000004</uuid></panel></left>
-\t<panelDef id="a1000004-0000-4000-8000-000000000004"/>
-\t<panelDef id="a1000005-0000-4000-8000-000000000005"/>
-\t<panelDef id="a1000006-0000-4000-8000-000000000006"/>
-\t<panelDef id="a1000002-0000-4000-8000-000000000002"/>
-\t<panelDef id="a1000007-0000-4000-8000-000000000007"/>
-</ClientApplicationInterface>
-""")
-
     # --- Configuration.xml ---
     src_cfg = Path("/home/ubuntu/.cursor/projects/workspace/uploads/Configuration_6471.xml")
     cfg_text = src_cfg.read_text(encoding="utf-8")
@@ -1178,12 +1202,12 @@ def main() -> None:
     ))
     cfg_text = cfg_text.replace("<Vendor/>", "<Vendor>Автопрокат</Vendor>")
     cfg_text = cfg_text.replace("<Version/>", "<Version>1.0.0.1</Version>")
-    write(OUT / "Configuration.xml", cfg_text)
+    write(OUT / "Configuration.xml", downgrade_configuration(cfg_text))
 
     # --- ConfigDumpInfo.xml ---
     src_dump = Path("/home/ubuntu/.cursor/projects/workspace/uploads/ConfigDumpInfo_afcd.xml")
     dump_text = src_dump.read_text(encoding="utf-8")
-    # Удаляем ссылку на отсутствующий файл автономной конфигурации
+    dump_text = re.sub(r'version="2\.\d+"', f'version="{VERSION}"', dump_text, count=1)
     dump_text = dump_text.replace(
         '\t\t<Metadata name="Configuration.Конфигурация.StandaloneConfigurationContent" '
         'id="b8ba0334-844c-44ad-8069-50de0a73125a.f" configVersion="2b2ed05e8d8b8348be88a8f0d7ea4a5900000000"/>\n',
@@ -1198,6 +1222,7 @@ def main() -> None:
         "  - Configuration.xml\n"
         "  - ConfigDumpInfo.xml\n"
         "  - папки Catalogs, Documents, Enums и др.\n\n"
+        "Формат выгрузки: 2.10 (совместим с учебной платформой 8.3.17).\n\n"
         "Конфигуратор → Конфигурация → Загрузить конфигурацию из файлов...\n"
         "Укажите путь к папке 1c-config\n"
     ))

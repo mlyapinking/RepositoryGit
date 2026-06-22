@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<Autofill>true</Autofill>
+	</AutoCommandBar>
+	<ChildItems>
+		<InputField name="Договор" id="1">
+			<DataPath>Объект.Договор</DataPath>
+			<ContextMenu name="ДоговорКонтекстноеМеню" id="101"/>
+			<ExtendedTooltip name="ДоговорРасширеннаяПодсказка" id="102"/>
+		</InputField>
+		<InputField name="ДатаВозврата" id="2">
+			<DataPath>Объект.ДатаВозврата</DataPath>
+			<ContextMenu name="ДатаВозвратаКонтекстноеМеню" id="201"/>
+			<ExtendedTooltip name="ДатаВозвратаРасширеннаяПодсказка" id="202"/>
+		</InputField>
+		<InputField name="КоличествоСуток" id="3">
+			<DataPath>Объект.КоличествоСуток</DataPath>
+			<ContextMenu name="КоличествоСутокКонтекстноеМеню" id="301"/>
+			<ExtendedTooltip name="КоличествоСутокРасширеннаяПодсказка" id="302"/>
+		</InputField>
+		<InputField name="ЦенаЗаСутки" id="4">
+			<DataPath>Объект.ЦенаЗаСутки</DataPath>
+			<ContextMenu name="ЦенаЗаСуткиКонтекстноеМеню" id="401"/>
+			<ExtendedTooltip name="ЦенаЗаСуткиРасширеннаяПодсказка" id="402"/>
+		</InputField>
+		<InputField name="ПробегФакт" id="5">
+			<DataPath>Объект.ПробегФакт</DataPath>
+			<ContextMenu name="ПробегФактКонтекстноеМеню" id="501"/>
+			<ExtendedTooltip name="ПробегФактРасширеннаяПодсказка" id="502"/>
+		</InputField>
+		<InputField name="ДопРасходы" id="6">
+			<DataPath>Объект.ДопРасходы</DataPath>
+			<ContextMenu name="ДопРасходыКонтекстноеМеню" id="601"/>
+			<ExtendedTooltip name="ДопРасходыРасширеннаяПодсказка" id="602"/>
+		</InputField>
+		<InputField name="ИтоговаяСумма" id="7">
+			<DataPath>Объект.ИтоговаяСумма</DataPath>
+			<ContextMenu name="ИтоговаяСуммаКонтекстноеМеню" id="701"/>
+			<ExtendedTooltip name="ИтоговаяСуммаРасширеннаяПодсказка" id="702"/>
+		</InputField>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type><v8:Type>cfg:DocumentObject.ФактПроката</v8:Type></Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

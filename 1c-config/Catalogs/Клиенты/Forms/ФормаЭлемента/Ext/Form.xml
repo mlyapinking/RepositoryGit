@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<Autofill>true</Autofill>
+	</AutoCommandBar>
+	<ChildItems>
+		<InputField name="Телефон" id="1">
+			<DataPath>Объект.Телефон</DataPath>
+			<ContextMenu name="ТелефонКонтекстноеМеню" id="101"/>
+			<ExtendedTooltip name="ТелефонРасширеннаяПодсказка" id="102"/>
+		</InputField>
+		<InputField name="Адрес" id="2">
+			<DataPath>Объект.Адрес</DataPath>
+			<ContextMenu name="АдресКонтекстноеМеню" id="201"/>
+			<ExtendedTooltip name="АдресРасширеннаяПодсказка" id="202"/>
+		</InputField>
+		<InputField name="ДатаРождения" id="3">
+			<DataPath>Объект.ДатаРождения</DataPath>
+			<ContextMenu name="ДатаРожденияКонтекстноеМеню" id="301"/>
+			<ExtendedTooltip name="ДатаРожденияРасширеннаяПодсказка" id="302"/>
+		</InputField>
+		<InputField name="НомерВУ" id="4">
+			<DataPath>Объект.НомерВУ</DataPath>
+			<ContextMenu name="НомерВУКонтекстноеМеню" id="401"/>
+			<ExtendedTooltip name="НомерВУРасширеннаяПодсказка" id="402"/>
+		</InputField>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type><v8:Type>cfg:CatalogObject.Клиенты</v8:Type></Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

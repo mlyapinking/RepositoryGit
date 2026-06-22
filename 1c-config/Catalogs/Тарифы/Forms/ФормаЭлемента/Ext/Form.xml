@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Form xmlns="http://v8.1c.ru/8.3/xcf/logform" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.20">
+	<AutoCommandBar name="ФормаКоманднаяПанель" id="-1">
+		<Autofill>true</Autofill>
+	</AutoCommandBar>
+	<ChildItems>
+		<InputField name="БазоваяСкорость" id="1">
+			<DataPath>Объект.БазоваяСкорость</DataPath>
+			<ContextMenu name="БазоваяСкоростьКонтекстноеМеню" id="101"/>
+			<ExtendedTooltip name="БазоваяСкоростьРасширеннаяПодсказка" id="102"/>
+		</InputField>
+		<InputField name="ЛимитКм" id="2">
+			<DataPath>Объект.ЛимитКм</DataPath>
+			<ContextMenu name="ЛимитКмКонтекстноеМеню" id="201"/>
+			<ExtendedTooltip name="ЛимитКмРасширеннаяПодсказка" id="202"/>
+		</InputField>
+		<InputField name="СтоимостьСверхлимита" id="3">
+			<DataPath>Объект.СтоимостьСверхлимита</DataPath>
+			<ContextMenu name="СтоимостьСверхлимитаКонтекстноеМеню" id="301"/>
+			<ExtendedTooltip name="СтоимостьСверхлимитаРасширеннаяПодсказка" id="302"/>
+		</InputField>
+	</ChildItems>
+	<Attributes>
+		<Attribute name="Объект" id="1">
+			<Type><v8:Type>cfg:CatalogObject.Тарифы</v8:Type></Type>
+			<MainAttribute>true</MainAttribute>
+			<SavedData>true</SavedData>
+		</Attribute>
+	</Attributes>
+</Form>

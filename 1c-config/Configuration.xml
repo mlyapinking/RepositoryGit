@@ -3,6 +3,10 @@
 	<Configuration uuid="5998e986-e618-4676-9b62-b4fa103b6668">
 		<InternalInfo>
 			<xr:ContainedObject>
+				<xr:ClassId>9cd510cd-abfc-11d4-9434-004095e12fc7</xr:ClassId>
+				<xr:ObjectId>b8ba0334-844c-44ad-8069-50de0a73125a</xr:ObjectId>
+			</xr:ContainedObject>
+			<xr:ContainedObject>
 				<xr:ClassId>9fcd25a0-4822-11d4-9414-008048da11f9</xr:ClassId>
 				<xr:ObjectId>22706a61-c4f0-477c-a548-4184a5ad0132</xr:ObjectId>
 			</xr:ContainedObject>
@@ -28,7 +32,7 @@
 			</xr:ContainedObject>
 		</InternalInfo>
 		<Properties>
-			<Name>Автопрокат</Name>
+			<Name>Конфигурация</Name>
 			<Synonym>
 				<v8:item>
 					<v8:lang>ru</v8:lang>

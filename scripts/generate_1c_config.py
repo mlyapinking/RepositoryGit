@@ -1161,7 +1161,6 @@ def main() -> None:
     # --- Configuration.xml ---
     src_cfg = Path("/home/ubuntu/.cursor/projects/workspace/uploads/Configuration_6471.xml")
     cfg_text = src_cfg.read_text(encoding="utf-8")
-    cfg_text = cfg_text.replace("<Name>Конфигурация</Name>", "<Name>Автопрокат</Name>")
     cfg_text = cfg_text.replace("<Synonym/>", (
         "<Synonym>\n\t\t\t\t<v8:item>\n\t\t\t\t\t<v8:lang>ru</v8:lang>\n"
         "\t\t\t\t\t<v8:content>Автопрокат — учёт аренды автомобилей</v8:content>\n"
@@ -1179,13 +1178,6 @@ def main() -> None:
     ))
     cfg_text = cfg_text.replace("<Vendor/>", "<Vendor>Автопрокат</Vendor>")
     cfg_text = cfg_text.replace("<Version/>", "<Version>1.0.0.1</Version>")
-    cfg_text = cfg_text.replace(
-        "\t\t\t<xr:ContainedObject>\n"
-        "\t\t\t\t<xr:ClassId>9cd510cd-abfc-11d4-9434-004095e12fc7</xr:ClassId>\n"
-        "\t\t\t\t<xr:ObjectId>b8ba0334-844c-44ad-8069-50de0a73125a</xr:ObjectId>\n"
-        "\t\t\t</xr:ContainedObject>\n",
-        "",
-    )
     write(OUT / "Configuration.xml", cfg_text)
 
     # --- ConfigDumpInfo.xml ---
@@ -1198,6 +1190,17 @@ def main() -> None:
         "",
     )
     write(OUT / "ConfigDumpInfo.xml", dump_text)
+
+    write(OUT / "!!! ЗАГРУЖАТЬ ИЗ ЭТОЙ ПАПКИ !!!.txt", (
+        "ВАЖНО: при загрузке в 1С выберите именно ЭТУ папку (1c-config),\n"
+        "а не корень репозитория RepositoryGit!\n\n"
+        "В этой папке должны лежать файлы:\n"
+        "  - Configuration.xml\n"
+        "  - ConfigDumpInfo.xml\n"
+        "  - папки Catalogs, Documents, Enums и др.\n\n"
+        "Конфигуратор → Конфигурация → Загрузить конфигурацию из файлов...\n"
+        "Укажите путь к папке 1c-config\n"
+    ))
 
     print(f"Generated config in {OUT}")
     print(f"Total files: {sum(1 for _ in OUT.rglob('*') if _.is_file())}")

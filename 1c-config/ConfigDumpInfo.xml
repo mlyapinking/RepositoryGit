@@ -43,7 +43,6 @@
 			<Metadata name="Document.ДоговАренды.Attribute.Автомобиль" id="cbededca-ca8a-4250-bca1-a2bb11550351"/>
 			<Metadata name="Document.ДоговАренды.Attribute.Клиент" id="f66d85b5-ccce-4183-9064-a5926a632226"/>
 		</Metadata>
-		<Metadata name="Document.ДоговАренды.ObjectModule" id="3269621a-c4d0-4c05-8cc1-edc4294ddfa1.0" configVersion="2e2433f41e00a4498689011fe3f9d88e00000000"/>
 		<Metadata name="Document.ФактПроката" id="7a5caa62-55b5-4ba0-8873-226855e5e260" configVersion="ae756e8cd9c1934ebfcab110e6fa5ff800000000">
 			<Metadata name="Document.ФактПроката.Attribute.ДатаВозврата" id="55a4585d-6b45-455b-b740-f37dfe0f2015"/>
 			<Metadata name="Document.ФактПроката.Attribute.ИтоговаяСумма" id="7dc259d8-a107-42bf-ba24-f281e02f1421"/>
@@ -53,9 +52,6 @@
 			<Metadata name="Document.ФактПроката.Attribute.ДопРасходы" id="d4f27a27-5450-4f99-bc47-cb592907ec5b"/>
 			<Metadata name="Document.ФактПроката.Attribute.КоличествоСуток" id="d847b952-1dc1-42d0-a564-fc76ae0a33c7"/>
 		</Metadata>
-		<Metadata name="Document.ФактПроката.Form.ФормаДокумента" id="d117bdee-33be-4433-9115-210cf9dd4857" configVersion="a1676debde311c4e96d46b76feaed4f000000000"/>
-		<Metadata name="Document.ФактПроката.Form.ФормаДокумента.Form" id="d117bdee-33be-4433-9115-210cf9dd4857.0" configVersion="f9b160c6bf337d41a0c136235fb6d38800000000"/>
-		<Metadata name="Document.ФактПроката.ObjectModule" id="7a5caa62-55b5-4ba0-8873-226855e5e260.0" configVersion="b529b7e4f5730944aba980bc61f4a31400000000"/>
 		<Metadata name="Enum.СтатусыАвтомобиля" id="5eda2f60-d968-4a55-9aa5-acf577d9e99c" configVersion="2079cb03aee21f4499369b957b2810a200000000">
 			<Metadata name="Enum.СтатусыАвтомобиля.EnumValue.Свободен" id="a10a3753-ac6d-4a9a-b415-69d398ee1488"/>
 			<Metadata name="Enum.СтатусыАвтомобиля.EnumValue.Занят" id="e1150620-db06-4424-9fee-5758b441e561"/>
@@ -83,21 +79,8 @@
 			<Metadata name="InformationRegister.ЦеныПроката.Dimension.Автомобиль" id="c2891b2d-1287-4fba-8cde-d4f123ccbf76"/>
 		</Metadata>
 		<Metadata name="Language.Русский" id="ece63e2c-d3df-4b8a-87b5-80c9d04ab3ab" configVersion="22cc7ea07ccb4247a5ba6b2bd647195900000000"/>
-		<Metadata name="Report.ДоходыОтПроката" id="562f400a-2d95-4be6-b931-71f0c000fd38" configVersion="40fef3238624174a940ad0d7f403b80000000000"/>
-		<Metadata name="Report.ДоходыОтПроката.Template.ОсновнаяСхемаКомпоновкиДанных" id="d62e88a6-b77f-4767-b171-ee25bbbbdfb8" configVersion="f2cb908021fae042ac84e9e29bc47f9a00000000"/>
-		<Metadata name="Report.ДоходыОтПроката.Template.ОсновнаяСхемаКомпоновкиДанных.Template" id="d62e88a6-b77f-4767-b171-ee25bbbbdfb8.0" configVersion="fc325b769c26d9408839b187143be34f00000000"/>
-		<Metadata name="Report.ИсторияАвтомобилей" id="a91bb7fd-30e3-4255-9561-c0417ac61662" configVersion="4d0c26cf25932b409b61afeb84ffc9e200000000"/>
-		<Metadata name="Report.ИсторияАвтомобилей.Template.ОсновнаяСхемаКомпоновкиДанных" id="f219e6ff-d12b-48e7-a793-9db8e3043aa5" configVersion="68c7bd267c481f45a0f46a25d50b20e000000000"/>
-		<Metadata name="Report.ИсторияАвтомобилей.Template.ОсновнаяСхемаКомпоновкиДанных.Template" id="f219e6ff-d12b-48e7-a793-9db8e3043aa5.0" configVersion="26f24f8693904c44a790d28f183d52e900000000"/>
-		<Metadata name="Report.СостояниеАвтопарка" id="7f4219ef-ab63-4fd9-937b-c258a526d247" configVersion="759f4c5d08df6c429928eb14738e936500000000"/>
-		<Metadata name="Report.СостояниеАвтопарка.Template.ОсновнаяСхемаКомпоновкиДанных" id="ba3ede61-0ebb-4fec-b482-f1070c08dca7" configVersion="a755d6b9a265684c8b64d1f960b63fe800000000"/>
-		<Metadata name="Report.СостояниеАвтопарка.Template.ОсновнаяСхемаКомпоновкиДанных.Template" id="ba3ede61-0ebb-4fec-b482-f1070c08dca7.0" configVersion="230015d59f7bc243b3401e1b7bf077d700000000"/>
 		<Metadata name="Role.Администратор" id="a73a2861-49f2-4e49-abef-0548278b200c" configVersion="f1417cdefd4a0b48b214cc81da0a2eb300000000"/>
 		<Metadata name="Role.Администратор.Rights" id="a73a2861-49f2-4e49-abef-0548278b200c.0" configVersion="a2b0988597f48f4288f14112fcd5da6500000000"/>
-		<Metadata name="Role.ВсеПрава" id="56763445-c5b2-4661-98e3-708ffcb8b584" configVersion="684ccb64db97914188c49243bacc793700000000"/>
-		<Metadata name="Role.ВсеПрава.Rights" id="56763445-c5b2-4661-98e3-708ffcb8b584.0" configVersion="9ab9c284ce86c242be3694a232f025ed00000000"/>
-		<Metadata name="Role.Менеджер" id="03daec1e-f6ad-43eb-a08b-c61c99558ad0" configVersion="ded287580a5c41488fe1ed5fc8031bd100000000"/>
-		<Metadata name="Role.Менеджер.Rights" id="03daec1e-f6ad-43eb-a08b-c61c99558ad0.0" configVersion="b8f314c7811b784180deda84a5fadd0b00000000"/>
 		<Metadata name="Subsystem.Прокат" id="47ba7ca8-63ea-4330-9bfd-dc5370d3bd87" configVersion="741ec3d6db46244a94353ac897ca9fef00000000"/>
 		<Metadata name="Subsystem.Справочники" id="37e0dd5e-aa1a-41b9-aff9-863b08d953b7" configVersion="310ec41b7a25e34ca3fc6b154d69dd3d00000000"/>
 		<Metadata name="Subsystem.УчетАвтомобилей" id="54ac6afe-aa6b-4d8f-9be6-1472746b92b7" configVersion="3cf2e5d4a02ecb45b8f457fdd534549600000000"/>

@@ -10,6 +10,8 @@ OUT = Path(__file__).resolve().parent.parent / "1c-config"
 # Учебная версия 1С: 8.3.17 → формат выгрузки 2.10
 VERSION = "2.10"
 COMPATIBILITY_MODE = "Version8_3_17"
+# Облегчённая сборка: без отчётов, предопределённых данных и тяжёлых прав
+EDUCATIONAL_LITE = True
 
 NS = (
     'xmlns="http://v8.1c.ru/8.3/MDClasses" '
@@ -54,6 +56,30 @@ def downgrade_configuration(cfg_text: str) -> str:
     """Strip properties from newer platforms for 8.3.17 educational edition."""
     cfg_text = re.sub(r'version="2\.\d+"', f'version="{VERSION}"', cfg_text, count=1)
     cfg_text = cfg_text.replace("Version8_3_27", COMPATIBILITY_MODE)
+    cfg_text = re.sub(
+        r"<UsedMobileApplicationFunctionalities>.*?</UsedMobileApplicationFunctionalities>",
+        "<UsedMobileApplicationFunctionalities/>",
+        cfg_text,
+        flags=re.DOTALL,
+    )
+    cfg_text = re.sub(
+        r"\s*<xr:ContainedObject>\s*<xr:ClassId>9cd510cd-abfc-11d4-9434-004095e12fc7</xr:ClassId>\s*"
+        r"<xr:ObjectId>b8ba0334-844c-44ad-8069-50de0a73125a</xr:ObjectId>\s*</xr:ContainedObject>\s*",
+        "\n",
+        cfg_text,
+        flags=re.DOTALL,
+    )
+    if EDUCATIONAL_LITE:
+        cfg_text = re.sub(r"\s*<Report>[^<]+</Report>\s*", "\n", cfg_text)
+        cfg_text = re.sub(r"\s*<Role>Менеджер</Role>\s*", "\n", cfg_text)
+        cfg_text = re.sub(r"\s*<Role>ВсеПрава</Role>\s*", "\n", cfg_text)
+        cfg_text = cfg_text.replace(
+            "<DefaultRoles>\n\t\t\t\t<xr:Item xsi:type=\"xr:MDObjectRef\">Role.Администратор</xr:Item>\n"
+            "\t\t\t\t<xr:Item xsi:type=\"xr:MDObjectRef\">Role.ВсеПрава</xr:Item>\n"
+            "\t\t\t</DefaultRoles>",
+            "<DefaultRoles>\n\t\t\t\t<xr:Item xsi:type=\"xr:MDObjectRef\">Role.Администратор</xr:Item>\n"
+            "\t\t\t</DefaultRoles>",
+        )
     newer_mobile = [
         "SpeechToText", "Geofences", "IncomingShareRequests",
         "AllIncomingShareRequestsTypesProcessing", "DocumentScanning",
@@ -77,6 +103,33 @@ def downgrade_configuration(cfg_text: str) -> str:
         cfg_text = re.sub(rf"\s*<{tag}/>\s*", "\n", cfg_text)
         cfg_text = re.sub(rf"\s*<{tag}>.*?</{tag}>\s*", "\n", cfg_text, flags=re.DOTALL)
     return cfg_text
+
+
+def filter_config_dump_info(dump_text: str) -> str:
+    """Keep only metadata entries that exist in the lite export."""
+    if not EDUCATIONAL_LITE:
+        return dump_text
+    skip_prefixes = ("Report.", "Role.ВсеПрава", "Role.Менеджер", "Document.ФактПроката.Form.")
+    lines = []
+    for line in dump_text.splitlines():
+        if '<Metadata name="' in line:
+            name = line.split('name="', 1)[1].split('"', 1)[0]
+            if any(name.startswith(p) for p in skip_prefixes):
+                continue
+        lines.append(line)
+    return "\n".join(lines) + "\n"
+
+
+def simple_rights() -> str:
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<Rights xmlns="http://v8.1c.ru/8.2/roles" xmlns:xs="http://www.w3.org/2001/XMLSchema" '
+        f'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="Rights" version="{VERSION}">\n'
+        "\t<setForNewObjects>true</setForNewObjects>\n"
+        "\t<setForAttributesByDefault>true</setForAttributesByDefault>\n"
+        "\t<independentRightsOfChildObjects>false</independentRightsOfChildObjects>\n"
+        "</Rights>\n"
+    )
 
 
 def enum_predefined_ref(value: str) -> str:
@@ -431,7 +484,7 @@ def catalog(name: str, synonym_text: str, obj_uuid: str, attributes: list, forms
         + catalog_std_attrs()
         + "\n\t\t\t</StandardAttributes>\n"
         + "\t\t\t<Characteristics/>\n"
-        + "\t\t\t<PredefinedDataUpdate>Auto</PredefinedDataUpdate>\n"
+        + f"\t\t\t<PredefinedDataUpdate>{'DontAutoUpdate' if EDUCATIONAL_LITE else 'Auto'}</PredefinedDataUpdate>\n"
         + "\t\t\t<EditType>InDialog</EditType>\n"
         + "\t\t\t<QuickChoice>false</QuickChoice>\n"
         + "\t\t\t<ChoiceMode>BothWays</ChoiceMode>\n"
@@ -879,49 +932,48 @@ def main() -> None:
     ]
     write(OUT / "Catalogs/Тарифы.xml", catalog("Тарифы", "Тарифы", "6cbffe2b-4012-4069-b652-8eb3f4563fae", tariff_attrs))
 
-    # Predefined data (номенклатура справочников)
-    write(OUT / "Catalogs/Автомобили/Ext/Predefined.xml", predefined_catalog([
-        {"id": "1", "name": "ToyotaCamry", "code": "000000001", "description": "Toyota Camry А123ВС77",
-         "attrs": {"Марка": "Toyota", "Модель": "Camry", "ГосНомер": "А123ВС77", "ГодВыпуска": "2022",
-                   "Цвет": "Белый", "ТипКоробкиПередач": "Enum.ТипКоробкиПередач.Автомат",
-                   "ТипТоплива": "Enum.ТипТоплива.Бензин", "ЦенаЗаСутки": "4500", "Статус": "Enum.СтатусыАвтомобиля.Свободен"}},
-        {"id": "2", "name": "HyundaiSolaris", "code": "000000002", "description": "Hyundai Solaris В456КХ77",
-         "attrs": {"Марка": "Hyundai", "Модель": "Solaris", "ГосНомер": "В456КХ77", "ГодВыпуска": "2021",
-                   "Цвет": "Серый", "ТипКоробкиПередач": "Enum.ТипКоробкиПередач.Автомат",
-                   "ТипТоплива": "Enum.ТипТоплива.Бензин", "ЦенаЗаСутки": "2800", "Статус": "Enum.СтатусыАвтомобиля.Свободен"}},
-        {"id": "3", "name": "KiaRio", "code": "000000003", "description": "Kia Rio С789МН77",
-         "attrs": {"Марка": "Kia", "Модель": "Rio", "ГосНомер": "С789МН77", "ГодВыпуска": "2020",
-                   "Цвет": "Красный", "ТипКоробкиПередач": "Enum.ТипКоробкиПередач.Механика",
-                   "ТипТоплива": "Enum.ТипТоплива.Бензин", "ЦенаЗаСутки": "2500", "Статус": "Enum.СтатусыАвтомобиля.Свободен"}},
-        {"id": "4", "name": "BMWX5", "code": "000000004", "description": "BMW X5 Е111ОР77",
-         "attrs": {"Марка": "BMW", "Модель": "X5", "ГосНомер": "Е111ОР77", "ГодВыпуска": "2023",
-                   "Цвет": "Чёрный", "ТипКоробкиПередач": "Enum.ТипКоробкиПередач.Автомат",
-                   "ТипТоплива": "Enum.ТипТоплива.Дизель", "ЦенаЗаСутки": "8500", "Статус": "Enum.СтатусыАвтомобиля.Свободен"}},
-        {"id": "5", "name": "TeslaModel3", "code": "000000005", "description": "Tesla Model 3 К222ТТ77",
-         "attrs": {"Марка": "Tesla", "Модель": "Model 3", "ГосНомер": "К222ТТ77", "ГодВыпуска": "2024",
-                   "Цвет": "Синий", "ТипКоробкиПередач": "Enum.ТипКоробкиПередач.Автомат",
-                   "ТипТоплива": "Enum.ТипТоплива.Электро", "ЦенаЗаСутки": "7000", "Статус": "Enum.СтатусыАвтомобиля.Свободен"}},
-    ]))
-
-    write(OUT / "Catalogs/Клиенты/Ext/Predefined.xml", predefined_catalog([
-        {"id": "1", "name": "ИвановИван", "code": "000000001", "description": "Иванов Иван Петрович",
-         "attrs": {"Телефон": "+7 (916) 123-45-67", "Адрес": "г. Москва, ул. Ленина, д. 10", "ДатаРождения": "1985-03-15", "НомерВУ": "77АА123456"}},
-        {"id": "2", "name": "ПетроваАнна", "code": "000000002", "description": "Петрова Анна Сергеевна",
-         "attrs": {"Телефон": "+7 (903) 987-65-43", "Адрес": "г. Москва, пр. Мира, д. 25", "ДатаРождения": "1990-07-22", "НомерВУ": "77ВВ654321"}},
-        {"id": "3", "name": "СидоровАлексей", "code": "000000003", "description": "Сидоров Алексей Николаевич",
-         "attrs": {"Телефон": "+7 (925) 555-12-34", "Адрес": "г. Химки, ул. Молодёжная, д. 5", "ДатаРождения": "1978-11-08", "НомерВУ": "50СС789012"}},
-    ]))
-
-    write(OUT / "Catalogs/Тарифы/Ext/Predefined.xml", predefined_catalog([
-        {"id": "1", "name": "Эконом", "code": "000000001", "description": "Эконом",
-         "attrs": {"БазоваяСкорость": "2000", "ЛимитКм": "200", "СтоимостьСверхлимита": "15"}},
-        {"id": "2", "name": "Стандарт", "code": "000000002", "description": "Стандарт",
-         "attrs": {"БазоваяСкорость": "3500", "ЛимитКм": "250", "СтоимостьСверхлимита": "20"}},
-        {"id": "3", "name": "Бизнес", "code": "000000003", "description": "Бизнес",
-         "attrs": {"БазоваяСкорость": "6000", "ЛимитКм": "300", "СтоимостьСверхлимита": "35"}},
-        {"id": "4", "name": "Премиум", "code": "000000004", "description": "Премиум",
-         "attrs": {"БазоваяСкорость": "10000", "ЛимитКм": "400", "СтоимостьСверхлимита": "50"}},
-    ]))
+    if not EDUCATIONAL_LITE:
+        # Predefined data (номенклатура справочников)
+        write(OUT / "Catalogs/Автомобили/Ext/Predefined.xml", predefined_catalog([
+            {"id": "1", "name": "ToyotaCamry", "code": "000000001", "description": "Toyota Camry А123ВС77",
+             "attrs": {"Марка": "Toyota", "Модель": "Camry", "ГосНомер": "А123ВС77", "ГодВыпуска": "2022",
+                       "Цвет": "Белый", "ТипКоробкиПередач": "Enum.ТипКоробкиПередач.Автомат",
+                       "ТипТоплива": "Enum.ТипТоплива.Бензин", "ЦенаЗаСутки": "4500", "Статус": "Enum.СтатусыАвтомобиля.Свободен"}},
+            {"id": "2", "name": "HyundaiSolaris", "code": "000000002", "description": "Hyundai Solaris В456КХ77",
+             "attrs": {"Марка": "Hyundai", "Модель": "Solaris", "ГосНомер": "В456КХ77", "ГодВыпуска": "2021",
+                       "Цвет": "Серый", "ТипКоробкиПередач": "Enum.ТипКоробкиПередач.Автомат",
+                       "ТипТоплива": "Enum.ТипТоплива.Бензин", "ЦенаЗаСутки": "2800", "Статус": "Enum.СтатусыАвтомобиля.Свободен"}},
+            {"id": "3", "name": "KiaRio", "code": "000000003", "description": "Kia Rio С789МН77",
+             "attrs": {"Марка": "Kia", "Модель": "Rio", "ГосНомер": "С789МН77", "ГодВыпуска": "2020",
+                       "Цвет": "Красный", "ТипКоробкиПередач": "Enum.ТипКоробкиПередач.Механика",
+                       "ТипТоплива": "Enum.ТипТоплива.Бензин", "ЦенаЗаСутки": "2500", "Статус": "Enum.СтатусыАвтомобиля.Свободен"}},
+            {"id": "4", "name": "BMWX5", "code": "000000004", "description": "BMW X5 Е111ОР77",
+             "attrs": {"Марка": "BMW", "Модель": "X5", "ГосНомер": "Е111ОР77", "ГодВыпуска": "2023",
+                       "Цвет": "Чёрный", "ТипКоробкиПередач": "Enum.ТипКоробкиПередач.Автомат",
+                       "ТипТоплива": "Enum.ТипТоплива.Дизель", "ЦенаЗаСутки": "8500", "Статус": "Enum.СтатусыАвтомобиля.Свободен"}},
+            {"id": "5", "name": "TeslaModel3", "code": "000000005", "description": "Tesla Model 3 К222ТТ77",
+             "attrs": {"Марка": "Tesla", "Модель": "Model 3", "ГосНомер": "К222ТТ77", "ГодВыпуска": "2024",
+                       "Цвет": "Синий", "ТипКоробкиПередач": "Enum.ТипКоробкиПередач.Автомат",
+                       "ТипТоплива": "Enum.ТипТоплива.Электро", "ЦенаЗаСутки": "7000", "Статус": "Enum.СтатусыАвтомобиля.Свободен"}},
+        ]))
+        write(OUT / "Catalogs/Клиенты/Ext/Predefined.xml", predefined_catalog([
+            {"id": "1", "name": "ИвановИван", "code": "000000001", "description": "Иванов Иван Петрович",
+             "attrs": {"Телефон": "+7 (916) 123-45-67", "Адрес": "г. Москва, ул. Ленина, д. 10", "ДатаРождения": "1985-03-15", "НомерВУ": "77АА123456"}},
+            {"id": "2", "name": "ПетроваАнна", "code": "000000002", "description": "Петрова Анна Сергеевна",
+             "attrs": {"Телефон": "+7 (903) 987-65-43", "Адрес": "г. Москва, пр. Мира, д. 25", "ДатаРождения": "1990-07-22", "НомерВУ": "77ВВ654321"}},
+            {"id": "3", "name": "СидоровАлексей", "code": "000000003", "description": "Сидоров Алексей Николаевич",
+             "attrs": {"Телефон": "+7 (925) 555-12-34", "Адрес": "г. Химки, ул. Молодёжная, д. 5", "ДатаРождения": "1978-11-08", "НомерВУ": "50СС789012"}},
+        ]))
+        write(OUT / "Catalogs/Тарифы/Ext/Predefined.xml", predefined_catalog([
+            {"id": "1", "name": "Эконом", "code": "000000001", "description": "Эконом",
+             "attrs": {"БазоваяСкорость": "2000", "ЛимитКм": "200", "СтоимостьСверхлимита": "15"}},
+            {"id": "2", "name": "Стандарт", "code": "000000002", "description": "Стандарт",
+             "attrs": {"БазоваяСкорость": "3500", "ЛимитКм": "250", "СтоимостьСверхлимита": "20"}},
+            {"id": "3", "name": "Бизнес", "code": "000000003", "description": "Бизнес",
+             "attrs": {"БазоваяСкорость": "6000", "ЛимитКм": "300", "СтоимостьСверхлимита": "35"}},
+            {"id": "4", "name": "Премиум", "code": "000000004", "description": "Премиум",
+             "attrs": {"БазоваяСкорость": "10000", "ЛимитКм": "400", "СтоимостьСверхлимита": "50"}},
+        ]))
 
     # --- Documents ---
     dog_attrs = [
@@ -936,7 +988,8 @@ def main() -> None:
         "ДоговАренды", "Договор аренды", "3269621a-c4d0-4c05-8cc1-edc4294ddfa1", dog_attrs,
         register_records=["InformationRegister.СтатусыАвтомобилей", "InformationRegister.ЦеныПроката"],
     ))
-    write(OUT / "Documents/ДоговАренды/Ext/ObjectModule.bsl", object_module_posting())
+    if not EDUCATIONAL_LITE:
+        write(OUT / "Documents/ДоговАренды/Ext/ObjectModule.bsl", object_module_posting())
 
     fact_attrs = [
         {"name": "Договор", "synonym": "Договор", "uuid": "a0f00ce1-d8f6-45e8-99f6-4229152d756c", "type": type_ref("DocumentRef.ДоговАренды"), "fill": "ShowError"},
@@ -951,9 +1004,10 @@ def main() -> None:
         "ФактПроката", "Факт проката", "7a5caa62-55b5-4ba0-8873-226855e5e260", fact_attrs,
         register_records=["AccumulationRegister.АрендаОбороты", "AccumulationRegister.ВзаиморасчетыСКлиентами",
                           "InformationRegister.СтатусыАвтомобилей"],
-        forms=["ФормаДокумента"],
+        forms=[] if EDUCATIONAL_LITE else ["ФормаДокумента"],
     ))
-    write(OUT / "Documents/ФактПроката/Ext/ObjectModule.bsl", """Процедура ОбработкаПроведения(Отказ, РежимПроведения)
+    if not EDUCATIONAL_LITE:
+        write(OUT / "Documents/ФактПроката/Ext/ObjectModule.bsl", """Процедура ОбработкаПроведения(Отказ, РежимПроведения)
 
 \tЕсли КоличествоСуток = 0 И ЗначениеЗаполнено(ДатаВозврата) Тогда
 \t\tКоличествоСуток = Цел((ДатаВозврата - Договор.ДатаНачала) / 86400);
@@ -965,11 +1019,10 @@ def main() -> None:
 
 КонецПроцедуры
 """)
-
-    form_uuid = "d117bdee-33be-4433-9115-210cf9dd4857"
-    write(OUT / "Documents/ФактПроката/Forms/ФормаДокумента.xml", document_form_meta(form_uuid))
-    write(OUT / "Documents/ФактПроката/Forms/ФормаДокумента/Ext/Form.xml",
-          document_item_form("ФактПроката", ["Договор", "ДатаВозврата", "КоличествоСуток", "ЦенаЗаСутки", "ПробегФакт", "ДопРасходы", "ИтоговаяСумма"]))
+        form_uuid = "d117bdee-33be-4433-9115-210cf9dd4857"
+        write(OUT / "Documents/ФактПроката/Forms/ФормаДокумента.xml", document_form_meta(form_uuid))
+        write(OUT / "Documents/ФактПроката/Forms/ФормаДокумента/Ext/Form.xml",
+              document_item_form("ФактПроката", ["Договор", "ДатаВозврата", "КоличествоСуток", "ЦенаЗаСутки", "ПробегФакт", "ДопРасходы", "ИтоговаяСумма"]))
 
     # --- Enums ---
     write(OUT / "Enums/ТипКоробкиПередач.xml", enum_obj("ТипКоробкиПередач", "Тип коробки передач", "cf385ce6-f503-4362-bb02-23472de2ad2d", [
@@ -1129,14 +1182,15 @@ def main() -> None:
         'xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows"/>\n'
         '\t</settingsVariant>\n</DataCompositionSchema>\n'
     )
-    for rname, rsyn, ruuid, tuuid in reports:
-        write(OUT / f"Reports/{rname}.xml", report(rname, rsyn, ruuid, tuuid))
-        write(OUT / f"Reports/{rname}/Templates/ОсновнаяСхемаКомпоновкиДанных.xml",
-              header() + f'\t<Template uuid="{tuuid}">\n\t\t<Properties>\n\t\t\t<Name>ОсновнаяСхемаКомпоновкиДанных</Name>\n'
-              + synonym("Основная схема компоновки данных", "\t\t\t")
-              + '\n\t\t\t<Comment/>\n\t\t\t<TemplateType>DataCompositionSchema</TemplateType>\n'
-              + '\t\t</Properties>\n\t</Template>\n' + footer())
-        write(OUT / f"Reports/{rname}/Templates/ОсновнаяСхемаКомпоновкиДанных/Ext/Template.xml", dcs_template)
+    if not EDUCATIONAL_LITE:
+        for rname, rsyn, ruuid, tuuid in reports:
+            write(OUT / f"Reports/{rname}.xml", report(rname, rsyn, ruuid, tuuid))
+            write(OUT / f"Reports/{rname}/Templates/ОсновнаяСхемаКомпоновкиДанных.xml",
+                  header() + f'\t<Template uuid="{tuuid}">\n\t\t<Properties>\n\t\t\t<Name>ОсновнаяСхемаКомпоновкиДанных</Name>\n'
+                  + synonym("Основная схема компоновки данных", "\t\t\t")
+                  + '\n\t\t\t<Comment/>\n\t\t\t<TemplateType>DataCompositionSchema</TemplateType>\n'
+                  + '\t\t</Properties>\n\t</Template>\n' + footer())
+            write(OUT / f"Reports/{rname}/Templates/ОсновнаяСхемаКомпоновкиДанных/Ext/Template.xml", dcs_template)
 
     # --- Subsystems ---
     write(OUT / "Subsystems/Справочники.xml", subsystem(
@@ -1145,7 +1199,8 @@ def main() -> None:
     ))
     write(OUT / "Subsystems/УчетАвтомобилей.xml", subsystem(
         "УчетАвтомобилей", "Учёт автомобилей", "54ac6afe-aa6b-4d8f-9be6-1472746b92b7",
-        ["Catalog.Автомобили", "InformationRegister.СтатусыАвтомобилей", "Report.СостояниеАвтопарка", "Report.ИсторияАвтомобилей"],
+        ["Catalog.Автомобили", "InformationRegister.СтатусыАвтомобилей"]
+        + ([] if EDUCATIONAL_LITE else ["Report.СостояниеАвтопарка", "Report.ИсторияАвтомобилей"]),
     ))
     write(OUT / "Subsystems/УчётКлиентов.xml", subsystem(
         "УчётКлиентов", "Учёт клиентов", "5352d185-a2c9-4d50-8416-98e155d8c959",
@@ -1154,23 +1209,25 @@ def main() -> None:
     write(OUT / "Subsystems/Прокат.xml", subsystem(
         "Прокат", "Прокат", "47ba7ca8-63ea-4330-9bfd-dc5370d3bd87",
         ["Document.ДоговАренды", "Document.ФактПроката", "Catalog.Тарифы",
-         "InformationRegister.ЦеныПроката", "AccumulationRegister.АрендаОбороты", "Report.ДоходыОтПроката"],
+         "InformationRegister.ЦеныПроката", "AccumulationRegister.АрендаОбороты"]
+        + ([] if EDUCATIONAL_LITE else ["Report.ДоходыОтПроката"]),
     ))
 
     # --- Roles ---
     write(OUT / "Roles/Администратор.xml", role("Администратор", "Администратор", "a73a2861-49f2-4e49-abef-0548278b200c"))
-    write(OUT / "Roles/Администратор/Ext/Rights.xml", rights_all_objects())
-    write(OUT / "Roles/ВсеПрава.xml", role("ВсеПрава", "Полные права", "56763445-c5b2-4661-98e3-708ffcb8b584"))
-    write(OUT / "Roles/ВсеПрава/Ext/Rights.xml", rights_all_objects())
-    write(OUT / "Roles/Менеджер.xml", role("Менеджер", "Менеджер", "03daec1e-f6ad-43eb-a08b-c61c99558ad0"))
-    mgr_objs = [
-        "Catalog.Автомобили", "Catalog.Клиенты", "Catalog.Тарифы",
-        "Document.ДоговАренды", "Document.ФактПроката",
-        "InformationRegister.ЦеныПроката", "InformationRegister.СтатусыАвтомобилей",
-        "AccumulationRegister.АрендаОбороты", "AccumulationRegister.ВзаиморасчетыСКлиентами",
-        "Report.ДоходыОтПроката", "Report.СостояниеАвтопарка", "Report.ИсторияАвтомобилей",
-    ]
-    write(OUT / "Roles/Менеджер/Ext/Rights.xml", manager_rights(mgr_objs))
+    write(OUT / "Roles/Администратор/Ext/Rights.xml", simple_rights() if EDUCATIONAL_LITE else rights_all_objects())
+    if not EDUCATIONAL_LITE:
+        write(OUT / "Roles/ВсеПрава.xml", role("ВсеПрава", "Полные права", "56763445-c5b2-4661-98e3-708ffcb8b584"))
+        write(OUT / "Roles/ВсеПрава/Ext/Rights.xml", rights_all_objects())
+        write(OUT / "Roles/Менеджер.xml", role("Менеджер", "Менеджер", "03daec1e-f6ad-43eb-a08b-c61c99558ad0"))
+        mgr_objs = [
+            "Catalog.Автомобили", "Catalog.Клиенты", "Catalog.Тарифы",
+            "Document.ДоговАренды", "Document.ФактПроката",
+            "InformationRegister.ЦеныПроката", "InformationRegister.СтатусыАвтомобилей",
+            "AccumulationRegister.АрендаОбороты", "AccumulationRegister.ВзаиморасчетыСКлиентами",
+            "Report.ДоходыОтПроката", "Report.СостояниеАвтопарка", "Report.ИсторияАвтомобилей",
+        ]
+        write(OUT / "Roles/Менеджер/Ext/Rights.xml", manager_rights(mgr_objs))
 
     # --- Language ---
     write(OUT / "Languages/Русский.xml", (
@@ -1197,8 +1254,8 @@ def main() -> None:
     ))
     cfg_text = cfg_text.replace("<DefaultRoles/>", (
         "<DefaultRoles>\n\t\t\t\t<xr:Item xsi:type=\"xr:MDObjectRef\">Role.Администратор</xr:Item>\n"
-        "\t\t\t\t<xr:Item xsi:type=\"xr:MDObjectRef\">Role.ВсеПрава</xr:Item>\n"
-        "\t\t\t</DefaultRoles>"
+        + ("" if EDUCATIONAL_LITE else "\t\t\t\t<xr:Item xsi:type=\"xr:MDObjectRef\">Role.ВсеПрава</xr:Item>\n")
+        + "\t\t\t</DefaultRoles>"
     ))
     cfg_text = cfg_text.replace("<Vendor/>", "<Vendor>Автопрокат</Vendor>")
     cfg_text = cfg_text.replace("<Version/>", "<Version>1.0.0.1</Version>")
@@ -1213,6 +1270,18 @@ def main() -> None:
         'id="b8ba0334-844c-44ad-8069-50de0a73125a.f" configVersion="2b2ed05e8d8b8348be88a8f0d7ea4a5900000000"/>\n',
         "",
     )
+    dump_text = filter_config_dump_info(dump_text)
+    if EDUCATIONAL_LITE:
+        dump_text = re.sub(
+            r'\t\t<Metadata name="Document\.ДоговАренды\.ObjectModule".*?\n',
+            "",
+            dump_text,
+        )
+        dump_text = re.sub(
+            r'\t\t<Metadata name="Document\.ФактПроката\.ObjectModule".*?\n',
+            "",
+            dump_text,
+        )
     write(OUT / "ConfigDumpInfo.xml", dump_text)
 
     write(OUT / "!!! ЗАГРУЖАТЬ ИЗ ЭТОЙ ПАПКИ !!!.txt", (
@@ -1222,7 +1291,9 @@ def main() -> None:
         "  - Configuration.xml\n"
         "  - ConfigDumpInfo.xml\n"
         "  - папки Catalogs, Documents, Enums и др.\n\n"
-        "Формат выгрузки: 2.10 (совместим с учебной платформой 8.3.17).\n\n"
+        "Формат выгрузки: 2.10 (учебная платформа 8.3.17).\n"
+        "Облегчённая сборка: без отчётов и предзаполненных данных.\n"
+        "Данные в справочники можно внести вручную после загрузки.\n\n"
         "Конфигуратор → Конфигурация → Загрузить конфигурацию из файлов...\n"
         "Укажите путь к папке 1c-config\n"
     ))

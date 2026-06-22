@@ -18,8 +18,6 @@
 			<Content>
 				<xr:Item xsi:type="xr:MDObjectRef">Catalog.Автомобили</xr:Item>
 				<xr:Item xsi:type="xr:MDObjectRef">InformationRegister.СтатусыАвтомобилей</xr:Item>
-				<xr:Item xsi:type="xr:MDObjectRef">Report.СостояниеАвтопарка</xr:Item>
-				<xr:Item xsi:type="xr:MDObjectRef">Report.ИсторияАвтомобилей</xr:Item>
 			</Content>
 		</Properties>
 		<ChildObjects/>

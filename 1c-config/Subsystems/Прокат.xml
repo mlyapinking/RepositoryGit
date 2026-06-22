@@ -21,7 +21,6 @@
 				<xr:Item xsi:type="xr:MDObjectRef">Catalog.Тарифы</xr:Item>
 				<xr:Item xsi:type="xr:MDObjectRef">InformationRegister.ЦеныПроката</xr:Item>
 				<xr:Item xsi:type="xr:MDObjectRef">AccumulationRegister.АрендаОбороты</xr:Item>
-				<xr:Item xsi:type="xr:MDObjectRef">Report.ДоходыОтПроката</xr:Item>
 			</Content>
 		</Properties>
 		<ChildObjects/>

@@ -279,7 +279,7 @@ def report_generated(name: str) -> str:
     )
 
 
-def dim_or_res(name: str, synonym_text: str, type_xml: str, obj_uuid: str, kind: str) -> str:
+def _reg_field_common(name: str, synonym_text: str, type_xml: str, obj_uuid: str, kind: str, extra: str) -> str:
     return f"""			<{kind} uuid="{obj_uuid}">
 				<Properties>
 					<Name>{name}</Name>
@@ -298,8 +298,6 @@ def dim_or_res(name: str, synonym_text: str, type_xml: str, obj_uuid: str, kind:
 					<ExtendedEdit>false</ExtendedEdit>
 					<MinValue xsi:nil="true"/>
 					<MaxValue xsi:nil="true"/>
-					<FillFromFillingValue>false</FillFromFillingValue>
-					<FillValue xsi:nil="true"/>
 					<FillChecking>DontCheck</FillChecking>
 					<ChoiceFoldersAndItems>Items</ChoiceFoldersAndItems>
 					<ChoiceParameterLinks/>
@@ -309,11 +307,49 @@ def dim_or_res(name: str, synonym_text: str, type_xml: str, obj_uuid: str, kind:
 					<ChoiceForm/>
 					<LinkByType/>
 					<ChoiceHistoryOnInput>Auto</ChoiceHistoryOnInput>
-					<Indexing>DontIndex</Indexing>
-					<FullTextSearch>Use</FullTextSearch>
-					<DataHistory>Use</DataHistory>
+{extra}
 				</Properties>
 			</{kind}>"""
+
+
+def info_reg_resource(name: str, synonym_text: str, type_xml: str, obj_uuid: str) -> str:
+    extra = (
+        "\t\t\t\t\t<FillFromFillingValue>false</FillFromFillingValue>\n"
+        "\t\t\t\t\t<FillValue xsi:nil=\"true\"/>\n"
+        "\t\t\t\t\t<Indexing>DontIndex</Indexing>\n"
+        "\t\t\t\t\t<FullTextSearch>Use</FullTextSearch>\n"
+        "\t\t\t\t\t<DataHistory>Use</DataHistory>"
+    )
+    return _reg_field_common(name, synonym_text, type_xml, obj_uuid, "Resource", extra)
+
+
+def info_reg_dimension(name: str, synonym_text: str, type_xml: str, obj_uuid: str, master: bool = True) -> str:
+    extra = (
+        "\t\t\t\t\t<FillFromFillingValue>false</FillFromFillingValue>\n"
+        "\t\t\t\t\t<FillValue xsi:nil=\"true\"/>\n"
+        f"\t\t\t\t\t<Master>{str(master).lower()}</Master>\n"
+        f"\t\t\t\t\t<MainFilter>{str(master).lower()}</MainFilter>\n"
+        "\t\t\t\t\t<DenyIncompleteValues>false</DenyIncompleteValues>\n"
+        "\t\t\t\t\t<Indexing>DontIndex</Indexing>\n"
+        "\t\t\t\t\t<FullTextSearch>Use</FullTextSearch>\n"
+        "\t\t\t\t\t<DataHistory>Use</DataHistory>"
+    )
+    return _reg_field_common(name, synonym_text, type_xml, obj_uuid, "Dimension", extra)
+
+
+def accum_reg_resource(name: str, synonym_text: str, type_xml: str, obj_uuid: str) -> str:
+    extra = "\t\t\t\t\t<FullTextSearch>Use</FullTextSearch>"
+    return _reg_field_common(name, synonym_text, type_xml, obj_uuid, "Resource", extra)
+
+
+def accum_reg_dimension(name: str, synonym_text: str, type_xml: str, obj_uuid: str) -> str:
+    extra = (
+        "\t\t\t\t\t<DenyIncompleteValues>false</DenyIncompleteValues>\n"
+        "\t\t\t\t\t<Indexing>DontIndex</Indexing>\n"
+        "\t\t\t\t\t<FullTextSearch>Use</FullTextSearch>\n"
+        "\t\t\t\t\t<UseInTotals>true</UseInTotals>"
+    )
+    return _reg_field_common(name, synonym_text, type_xml, obj_uuid, "Dimension", extra)
 
 
 def catalog(name: str, synonym_text: str, obj_uuid: str, attributes: list, forms: list | None = None) -> str:
@@ -847,7 +883,7 @@ def main() -> None:
     ]:
         for form in ["ФормаЭлемента", "ФормаСписка"]:
             f_uuid = uid(f"form:{cat}:{form}")
-            write(OUT / f"Catalogs/{cat}/Forms/{form}/{form}.xml", catalog_form_meta(cat, form, f_uuid))
+            write(OUT / f"Catalogs/{cat}/Forms/{form}.xml", catalog_form_meta(cat, form, f_uuid))
             write(OUT / f"Catalogs/{cat}/Forms/{form}/Ext/Form.xml", catalog_item_form(cat, fields if form == "ФормаЭлемента" else ["Code", "Description"]))
 
     # --- Documents ---
@@ -894,7 +930,7 @@ def main() -> None:
 """)
 
     form_uuid = "d117bdee-33be-4433-9115-210cf9dd4857"
-    write(OUT / "Documents/ФактПроката/Forms/ФормаДокумента/ФормаДокумента.xml", document_form_meta(form_uuid))
+    write(OUT / "Documents/ФактПроката/Forms/ФормаДокумента.xml", document_form_meta(form_uuid))
     write(OUT / "Documents/ФактПроката/Forms/ФормаДокумента/Ext/Form.xml",
           document_item_form("ФактПроката", ["Договор", "ДатаВозврата", "КоличествоСуток", "ЦенаЗаСутки", "ПробегФакт", "ДопРасходы", "ИтоговаяСумма"]))
 
@@ -920,8 +956,8 @@ def main() -> None:
 
     # --- Information Registers ---
     def info_register(name, synonym_text, obj_uuid, dims, resources, periodicity="Day"):
-        dims_xml = "\n".join(dim_or_res(d["name"], d["synonym"], d["type"], d["uuid"], "Dimension") for d in dims)
-        res_xml = "\n".join(dim_or_res(r["name"], r["synonym"], r["type"], r["uuid"], "Resource") for r in resources)
+        dims_xml = "\n".join(info_reg_dimension(d["name"], d["synonym"], d["type"], d["uuid"]) for d in dims)
+        res_xml = "\n".join(info_reg_resource(r["name"], r["synonym"], r["type"], r["uuid"]) for r in resources)
         return (
             header()
             + f'\t<InformationRegister uuid="{obj_uuid}">\n'
@@ -965,8 +1001,8 @@ def main() -> None:
 
     # --- Accumulation Registers ---
     def accum_register(name, synonym_text, obj_uuid, dims, resources, reg_type="Turnovers"):
-        dims_xml = "\n".join(dim_or_res(d["name"], d["synonym"], d["type"], d["uuid"], "Dimension") for d in dims)
-        res_xml = "\n".join(dim_or_res(r["name"], r["synonym"], r["type"], r["uuid"], "Resource") for r in resources)
+        dims_xml = "\n".join(accum_reg_dimension(d["name"], d["synonym"], d["type"], d["uuid"]) for d in dims)
+        res_xml = "\n".join(accum_reg_resource(r["name"], r["synonym"], r["type"], r["uuid"]) for r in resources)
         return (
             header()
             + f'\t<AccumulationRegister uuid="{obj_uuid}">\n'
@@ -1058,7 +1094,7 @@ def main() -> None:
     )
     for rname, rsyn, ruuid, tuuid in reports:
         write(OUT / f"Reports/{rname}.xml", report(rname, rsyn, ruuid, tuuid))
-        write(OUT / f"Reports/{rname}/Templates/ОсновнаяСхемаКомпоновкиДанных/ОсновнаяСхемаКомпоновкиДанных.xml",
+        write(OUT / f"Reports/{rname}/Templates/ОсновнаяСхемаКомпоновкиДанных.xml",
               header() + f'\t<Template uuid="{tuuid}">\n\t\t<Properties>\n\t\t\t<Name>ОсновнаяСхемаКомпоновкиДанных</Name>\n'
               + synonym("Основная схема компоновки данных", "\t\t\t")
               + '\n\t\t\t<Comment/>\n\t\t\t<TemplateType>DataCompositionSchema</TemplateType>\n'
@@ -1143,11 +1179,25 @@ def main() -> None:
     ))
     cfg_text = cfg_text.replace("<Vendor/>", "<Vendor>Автопрокат</Vendor>")
     cfg_text = cfg_text.replace("<Version/>", "<Version>1.0.0.1</Version>")
+    cfg_text = cfg_text.replace(
+        "\t\t\t<xr:ContainedObject>\n"
+        "\t\t\t\t<xr:ClassId>9cd510cd-abfc-11d4-9434-004095e12fc7</xr:ClassId>\n"
+        "\t\t\t\t<xr:ObjectId>b8ba0334-844c-44ad-8069-50de0a73125a</xr:ObjectId>\n"
+        "\t\t\t</xr:ContainedObject>\n",
+        "",
+    )
     write(OUT / "Configuration.xml", cfg_text)
 
     # --- ConfigDumpInfo.xml ---
     src_dump = Path("/home/ubuntu/.cursor/projects/workspace/uploads/ConfigDumpInfo_afcd.xml")
-    write(OUT / "ConfigDumpInfo.xml", src_dump.read_text(encoding="utf-8"))
+    dump_text = src_dump.read_text(encoding="utf-8")
+    # Удаляем ссылку на отсутствующий файл автономной конфигурации
+    dump_text = dump_text.replace(
+        '\t\t<Metadata name="Configuration.Конфигурация.StandaloneConfigurationContent" '
+        'id="b8ba0334-844c-44ad-8069-50de0a73125a.f" configVersion="2b2ed05e8d8b8348be88a8f0d7ea4a5900000000"/>\n',
+        "",
+    )
+    write(OUT / "ConfigDumpInfo.xml", dump_text)
 
     print(f"Generated config in {OUT}")
     print(f"Total files: {sum(1 for _ in OUT.rglob('*') if _.is_file())}")

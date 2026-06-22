@@ -35,7 +35,6 @@
 			<Metadata name="Catalog.Тарифы.Attribute.БазоваяСкорость" id="95965eaa-9bd0-42a0-b4a0-0797ac936cf1"/>
 		</Metadata>
 		<Metadata name="Configuration.Конфигурация" id="5998e986-e618-4676-9b62-b4fa103b6668" configVersion="a52d309e88a0bd48aa887f4333b5789f00000000"/>
-		<Metadata name="Configuration.Конфигурация.StandaloneConfigurationContent" id="b8ba0334-844c-44ad-8069-50de0a73125a.f" configVersion="2b2ed05e8d8b8348be88a8f0d7ea4a5900000000"/>
 		<Metadata name="Document.ДоговАренды" id="3269621a-c4d0-4c05-8cc1-edc4294ddfa1" configVersion="00daf660fb3cca4f8b2a9eae0424dfe000000000">
 			<Metadata name="Document.ДоговАренды.Attribute.Тариф" id="3a1a088c-8255-4433-9d22-c3ad6cf81ea9"/>
 			<Metadata name="Document.ДоговАренды.Attribute.СуммаЗалога" id="71754675-4db7-4ac0-95cb-50d4b88a4003"/>

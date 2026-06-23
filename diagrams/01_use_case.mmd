@@ -1,0 +1,36 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#ffffff', 'primaryTextColor': '#000000', 'primaryBorderColor': '#000000', 'lineColor': '#000000', 'secondaryColor': '#f5f5f5', 'tertiaryColor': '#ffffff', 'fontFamily': 'Times New Roman'}}}%%
+flowchart TB
+    subgraph Actors[" "]
+        direction TB
+        ADM(("Администратор"))
+        MGR(("Менеджер<br/>по аренде"))
+        DIR(("Директор"))
+        CLI(("Клиент"))
+    end
+
+    subgraph System["ИС учёта аренды автомобилей"]
+        direction TB
+        UC1["Управление<br/>пользователями"]
+        UC2["Управление правами<br/>доступа"]
+        UC3["Ведение справочников<br/>Автомобили, Клиенты"]
+        UC4["Регистрация клиента"]
+        UC5["Оформление<br/>договора аренды"]
+        UC6["Закрытие аренды"]
+        UC7["Учёт пробега<br/>и доп. расходов"]
+        UC8["Отчёт «Автопарк»"]
+        UC9["Отчёт «Доходы<br/>от проката»"]
+        UC10["Контроль статусов<br/>автомобилей"]
+    end
+
+    ADM --> UC1
+    ADM --> UC2
+    ADM --> UC3
+    MGR --> UC4
+    MGR --> UC5
+    MGR --> UC6
+    MGR --> UC7
+    MGR --> UC8
+    DIR --> UC8
+    DIR --> UC9
+    DIR --> UC10
+    CLI -.-> UC5

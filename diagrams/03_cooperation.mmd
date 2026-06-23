@@ -1,0 +1,38 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#ffffff', 'primaryTextColor': '#000000', 'primaryBorderColor': '#000000', 'lineColor': '#000000', 'fontFamily': 'Times New Roman'}}}%%
+flowchart LR
+    subgraph actors[" "]
+        MGR[Менеджер]
+    end
+
+    subgraph docs[" "]
+        FORM[Форма документа<br/>«Договор аренды»]
+        DOC[Документ<br/>«Договор аренды»]
+    end
+
+    subgraph refs["Справочники"]
+        CLI[Клиенты]
+        CAR[Автомобили]
+        PRICE[Цены проката]
+    end
+
+    subgraph regs["Регистры"]
+        STAT[Статус<br/>автопарка]
+        INC[Доходы<br/>от проката]
+    end
+
+    MGR -->|1| FORM
+    FORM -->|2| DOC
+    DOC --- CLI
+    DOC --- CAR
+    DOC --- PRICE
+    DOC -->|3| STAT
+    DOC -->|4| INC
+
+    classDef actor fill:#f5f5f5,stroke:#000,stroke-width:1px
+    classDef doc fill:#fff,stroke:#000,stroke-width:1px
+    classDef ref fill:#fff,stroke:#000,stroke-width:1px
+    classDef reg fill:#fff,stroke:#000,stroke-width:1px
+    class MGR actor
+    class FORM,DOC doc
+    class CLI,CAR,PRICE ref
+    class STAT,INC reg

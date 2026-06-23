@@ -26,7 +26,13 @@
 
 ## Пересоздать PNG (если нужно изменить)
 
+**ER и Use Case (аккуратные PK→FK, тёмная сетка):**
+```bash
+python3 diagrams/draw_diagrams.py
+```
+
+**Остальные (Mermaid):**
 ```bash
 cd diagrams
-npx mmdc -i 01_use_case.mmd -o 01_use_case.png -b white -w 1400
+npx mmdc -i 02_sequence.mmd -o 02_sequence.png -b white -w 1400
 ```

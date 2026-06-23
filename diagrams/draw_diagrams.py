@@ -192,43 +192,46 @@ def uc_actor(ax, x, y, label, side='left'):
     return {'anchor': anchor, 'side': side, 'x': x, 'y': y}
 
 
-def link_actor_bus(ax, actor, ucs, side='left', dashed=False):
-    """Шина: актор → вертикаль → короткие горизонтали к каждому варианту."""
+def link_actor_uc(ax, actor, uc, lane=0, dashed=False, side='left'):
+    """Прямая ортогональная связь актор → овал (каждая линия отдельно)."""
     ax0, ay0 = actor['anchor']
     ls = '--' if dashed else '-'
-    lw = 1.0
+    lw = 1.45
 
     if side == 'left':
-        bus_x = min(max(uc['left'] for uc in ucs) - 0.55, ax0 + 0.9)
-        ax.plot([ax0, bus_x], [ay0, ay0], color=LINE, lw=lw, ls=ls, zorder=1)
-        ys = [uc['cy'] for uc in ucs]
-        ax.plot([bus_x, bus_x], [min(ys), max(ys)], color=LINE, lw=lw, ls=ls, zorder=1)
-        for uc in ucs:
-            ax.plot([bus_x, uc['left']], [uc['cy'], uc['cy']],
-                    color=LINE, lw=lw, ls=ls, zorder=1)
+        mid_x = ax0 + 0.28 + lane * 0.24
+        tx, ty = uc['left'], uc['cy']
     else:
-        bus_x = max(min(uc['right'] for uc in ucs) + 0.55, ax0 - 0.9)
-        ax.plot([ax0, bus_x], [ay0, ay0], color=LINE, lw=lw, ls=ls, zorder=1)
-        ys = [uc['cy'] for uc in ucs]
-        ax.plot([bus_x, bus_x], [min(ys), max(ys)], color=LINE, lw=lw, ls=ls, zorder=1)
-        for uc in ucs:
-            ax.plot([bus_x, uc['right']], [uc['cy'], uc['cy']],
-                    color=LINE, lw=lw, ls=ls, zorder=1)
+        mid_x = ax0 - 0.28 - lane * 0.24
+        tx, ty = uc['right'], uc['cy']
+
+    pts = [(ax0, ay0), (mid_x, ay0), (mid_x, ty), (tx, ty)]
+    for i in range(len(pts) - 1):
+        x1, y1 = pts[i]
+        x2, y2 = pts[i + 1]
+        ax.plot([x1, x2], [y1, y2], color=LINE, lw=lw, ls=ls, zorder=1,
+                solid_capstyle='round')
+
+
+def link_actor_group(ax, actor, ucs, side='left', dashed=False):
+    for i, uc in enumerate(ucs):
+        link_actor_uc(ax, actor, uc, lane=i, dashed=dashed, side=side)
 
 
 def build_use_case():
-    fig, ax = plt.subplots(figsize=(9, 9), dpi=180)
-    draw_grid(ax, (0, 9), (0, 9))
+    # Вертикальный формат — не «плоский», связи хорошо видны
+    fig, ax = plt.subplots(figsize=(8.5, 10.5), dpi=180)
+    draw_grid(ax, (0, 8.5), (0, 10.5))
 
-    bx, by, bw, bh = 2.15, 1.55, 4.7, 5.35
+    bx, by, bw, bh = 1.85, 1.35, 4.85, 7.55
     ax.add_patch(FancyBboxPatch(
         (bx, by), bw, bh, boxstyle='square,pad=0.02',
-        facecolor='none', edgecolor=BOX_EDGE, linewidth=1.7, zorder=2))
-    ax.text(bx + bw / 2, by + bh + 0.25, 'ИС учёта аренды автомобилей',
-            ha='center', va='bottom', fontsize=10, color=TEXT, fontweight='bold')
+        facecolor='none', edgecolor=BOX_EDGE, linewidth=1.8, zorder=2))
+    ax.text(bx + bw / 2, by + bh + 0.3, 'ИС учёта аренды автомобилей',
+            ha='center', va='bottom', fontsize=10.5, color=TEXT, fontweight='bold')
 
-    xs = [2.95, 4.5, 6.05]
-    ys = [5.65, 4.15, 2.65]
+    xs = [2.75, 4.35, 5.95]
+    ys = [7.55, 5.35, 3.15]
     labels = [
         ['Управление\nпользователями', 'Управление\nправами', 'Ведение\nсправочников'],
         ['Регистрация\nклиента', 'Оформление\nдоговора\nаренды', 'Закрытие\nаренды'],
@@ -238,20 +241,21 @@ def build_use_case():
     for row, y in enumerate(ys):
         row_uc = []
         for col, x in enumerate(xs):
-            row_uc.append(uc_ellipse(ax, x, y, labels[row][col]))
+            row_uc.append(uc_ellipse(ax, x, y, labels[row][col], w=1.15, h=0.78, fs=7.1))
         ucs.append(row_uc)
 
-    admin = uc_actor(ax, 0.65, 6.75, 'Администратор', 'left')
-    mgr = uc_actor(ax, 0.65, 4.15, 'Менеджер', 'left')
-    director = uc_actor(ax, 8.35, 3.65, 'Директор', 'right')
-    client = uc_actor(ax, 8.35, 2.65, 'Клиент', 'right')
+    # Акторы по высоте рядом со «своими» вариантами
+    admin = uc_actor(ax, 0.45, 7.55, 'Администратор', 'left')
+    mgr = uc_actor(ax, 0.45, 4.85, 'Менеджер', 'left')
+    director = uc_actor(ax, 8.05, 3.15, 'Директор', 'right')
+    client = uc_actor(ax, 8.05, 5.35, 'Клиент', 'right')
 
-    link_actor_bus(ax, admin, ucs[0], 'left')
-    link_actor_bus(ax, mgr, ucs[1] + [ucs[2][0]], 'left')
-    link_actor_bus(ax, director, ucs[2][1:], 'right')
-    link_actor_bus(ax, client, [ucs[1][1], ucs[1][2]], 'right', dashed=True)
+    link_actor_group(ax, admin, ucs[0], 'left')
+    link_actor_group(ax, mgr, ucs[1] + [ucs[2][0]], 'left')
+    link_actor_group(ax, director, ucs[2][1:], 'right')
+    link_actor_group(ax, client, [ucs[1][1], ucs[1][2]], 'right', dashed=True)
 
-    fig.savefig(OUT_UC, facecolor=BG, bbox_inches='tight', pad_inches=0.08)
+    fig.savefig(OUT_UC, facecolor=BG, bbox_inches='tight', pad_inches=0.1)
     plt.close(fig)
     print('UC OK')
 
